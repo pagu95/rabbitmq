@@ -48,12 +48,12 @@ myarray.push({
       var n = parseInt(msg.content.toString());
 
       console.log(" [.]i got -> (%d)", n);
-	
+	var r = 0;
 	    if(n == 1){
 
-		var r = myarray;
+		r = myarray;
 	 	r = JSON.stringify(myarray);
-	    }
+	    }else {console.log("different code")}
 
       channel.sendToQueue(msg.properties.replyTo,
         Buffer.from(r), {

@@ -9,6 +9,35 @@ function generateUuid() {
          Math.random().toString();
 }
 
+function modifyJ(msg){
+	
+	
+	var jarray = JSON.parse(msg.content.toString());
+        jarray = groupBy('color',jarray);
+        jarray = JSON.stringify(jarray);
+	return jarray
+}
+
+function groupBy(key, array) {
+  var result = [];
+  for (var i = 0; i < array.length; i++) {
+    var added = false;
+    for (var j = 0; j < result.length; j++) {
+      if (result[j][key] == array[i][key]) {
+        result[j].items.push(array[i]);
+        added = true;
+        break;
+      }
+    }
+    if (!added) {
+      var entry = {items: []};
+      entry[key] = array[i][key];
+      entry.items.push(array[i]);
+      result.push(entry);
+    }
+  }
+  return result;
+}
 
 /*
 if (args.length == 0) {
@@ -31,14 +60,19 @@ amqp.connect('amqp://localhost', function(error0, connection) {
         throw error2;
       }
       var correlationId = generateUuid();
-
+	    var myarray = [];
 	    var num = 1;
+	    
       console.log(' [x] Requesting json array code(%d)', num);
 
       channel.consume(q.queue, function(msg) {
         if (msg.properties.correlationId == correlationId) {
-          console.log(' [.] Got %s', msg.content.toString());
-          setTimeout(function() { 
+          console.log(' [.] Got %s\n', msg.content.toString());
+          	
+		myarray = modifyJ(msg);
+		console.log("[.] Table modified to:",myarray)
+
+	    setTimeout(function() { 
             connection.close(); 
             process.exit(0) 
           }, 500);
@@ -52,6 +86,18 @@ amqp.connect('amqp://localhost', function(error0, connection) {
           correlationId: correlationId, 
           replyTo: q.queue 
 	});
+
+/*
+	if(myarray.length != 0){
+		console.log("myarray is not 0");
+	    channel.sendToQueue('rpc_queue',
+        Buffer.from(myarray),{
+          correlationId: correlationId,
+          replyTo: q.queue
+        });
+	}else{console.log ("myarray is indeed 0")}
+    */
+
     });
   });
 });
