@@ -1,6 +1,16 @@
 var amqp = require('amqplib/callback_api');
 
 //var args = process.argv.slice(2);
+/*
+        if(myarray.length != 0){
+                console.log("myarray is not 0");
+            channel.sendToQueue('rpc_queue',
+        Buffer.from(myarray),{
+          correlationId: correlationId,
+          replyTo: q.queue
+        });
+        }else{console.log ("myarray is indeed 0")}
+    */
 
 
 function generateUuid() {
@@ -38,12 +48,23 @@ function groupBy(key, array) {
   }
   return result;
 }
+var myarray = [];
+var num = 1;
 
 /*
 if (args.length == 0) {
   console.log("Usage: rpc_client.js num");
   process.exit(1);
 }*/
+/*if(myarray.length != 0){
+                console.log("myarray is not 0");
+            channel.sendToQueue('rpc_queue',
+        Buffer.from(myarray),{
+          correlationId: correlationId,
+          replyTo: q.queue
+        });
+        }else{console.log ("myarray is indeed 0")}
+*/
 
 amqp.connect('amqp://localhost', function(error0, connection) {
   if (error0) {
@@ -60,8 +81,7 @@ amqp.connect('amqp://localhost', function(error0, connection) {
         throw error2;
       }
       var correlationId = generateUuid();
-	    var myarray = [];
-	    var num = 1;
+	    
 	    
       console.log(' [x] Requesting json array code(%d)', num);
 
@@ -80,24 +100,13 @@ amqp.connect('amqp://localhost', function(error0, connection) {
       }, {
         noAck: true
       });
+	console.log("\n\n[.] Table:",myarray)
 
       channel.sendToQueue('rpc_queue',
         Buffer.from(num.toString()),{ 
           correlationId: correlationId, 
           replyTo: q.queue 
 	});
-
-/*
-	if(myarray.length != 0){
-		console.log("myarray is not 0");
-	    channel.sendToQueue('rpc_queue',
-        Buffer.from(myarray),{
-          correlationId: correlationId,
-          replyTo: q.queue
-        });
-	}else{console.log ("myarray is indeed 0")}
-    */
-
     });
   });
 });

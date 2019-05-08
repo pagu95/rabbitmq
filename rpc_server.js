@@ -45,11 +45,11 @@ myarray.push({
     channel.prefetch(1);
     console.log(' [x] Awaiting RPC requests');
     channel.consume(queue, function reply(msg) {
-      var n = parseInt(msg.content.toString());
+      var n = 0;  
 
-      console.log(" [.]i got -> (%d)", n);
+      console.log(" [.]i got -> (%d)", parseInt(msg.content.toString()));
 	var r = 0;
-	    if(n == 1){
+	    if( parseInt(msg.content.toString()) == 1){
 
 		r = myarray;
 	 	r = JSON.stringify(myarray);
