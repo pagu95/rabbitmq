@@ -5,28 +5,38 @@ var myarray = [];
 myarray.push({
     "id": 1,
     "color": "blue",
-    "model_name": "ford",
-    "year": 2016
+    "model_name": "Ford",
+    "year": 2019
 },{
     "id": 2,
     "color": "red",
     "model_name": "Fiat",
-    "year": 2016
+    "year": 2007
 }, {
     "id": 3,
     "color": "blue",
     "model_name": "Maruti",
-    "year": 2016
+    "year": 2015
 }, {
     "id": 4,
-    "color": "red",
+    "color": "green",
     "model_name": "Fiat",
-    "year": 2016
+    "year": 2019
 }, {
     "id": 5,
     "color": "red",
-    "model_name": "tata",
-    "year": 2016
+    "model_name": "Ata",
+    "year": 2013
+},{
+    "id": 7,
+    "color": "green",
+    "model_name": "Fiat",
+    "year": 2020
+},{
+    "id": 8,
+    "color": "red",
+    "model_name": "Audi",
+    "year": 2012
 });
 
 myarray = JSON.stringify(myarray);
@@ -41,7 +51,6 @@ amqp.connect('amqp://localhost', function(error0, connection) {
         throw error1;
       }
 
-      var msg = ('this is a test for original array');
 
       channel.assertExchange('originalex','direct', {
         durable: false
@@ -57,8 +66,8 @@ amqp.connect('amqp://localhost', function(error0, connection) {
       //channel.prefetch(1);
       channel.bindQueue('originalq','originalex','first');
 
-      channel.publish('originalex','first',Buffer.from (msg));
-      console.log("[x] Sending my array:\n\n",msg)
+      channel.publish('originalex','first',Buffer.from (myarray));
+      console.log("[x] Sending my array\n\n")
 
           });
         });//createChannel

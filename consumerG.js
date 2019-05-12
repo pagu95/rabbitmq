@@ -1,6 +1,38 @@
 var amqp = require('amqplib/callback_api');
 var fs = require('fs');
+var jarray= [];
 
+function modifyJ(msg){
+
+
+	var jarray = JSON.parse(msg.content.toString());
+        jarray = groupBy('color',jarray);
+        jarray = JSON.stringify(jarray);
+	return jarray
+}
+
+function groupBy(key, array) {
+  var result = [];
+  for (var i = 0; i < array.length; i++) {
+    var added = false;
+    for (var j = 0; j < result.length; j++) {
+      if (result[j][key] == array[i][key]) {
+        result[j].items.push(array[i]);
+        added = true;
+        break;
+      }
+    }
+    if (!added) {
+      var entry = {items: [] };
+      entry[key] = array[i][key];
+      entry.items.push(array[i]);
+      result.push(entry);
+    }
+  }
+  return result;
+}
+
+var myarray = [];
 
 amqp.connect('amqp://localhost', function(error0, connection) {
   if (error0) {
@@ -23,23 +55,28 @@ amqp.connect('amqp://localhost', function(error0, connection) {
       }*/
 
       channel.bindQueue('originalq','originalex2','first');
-      console.log("after bindQueue");
       channel.prefetch(1);
       channel.consume('originalq',function (msg){
 
       console.log("[x] sould have received array from original:",msg.content.toString( ));
+
+      myarray = modifyJ(msg);
+      console.log("[x] now you see the modified array",myarray);
+      fs.writeFile('groupedArray.json',myarray,'utf-8');
+
       },{
         noAck:true
       });
   //  });
   });//createChannel
 
+
+setTimeout(function(){
   connection.createChannel(function(error1, channel2) {
     if (error1) {
       throw error1;
     }
-
-        var msg = 'this is a test for grouped array';
+    var msg = fs.readFileSync('groupedArray.json','utf-8');
     channel2.assertExchange('groupedex','direct', {
       durable: false
     });
@@ -50,7 +87,6 @@ amqp.connect('amqp://localhost', function(error0, connection) {
         throw error2;
       }
 
-    //channel.prefetch(1);
     channel2.bindQueue('groupedq','groupedex','second');
 
     channel2.publish('groupedex','second',Buffer.from(msg));
@@ -63,5 +99,5 @@ amqp.connect('amqp://localhost', function(error0, connection) {
           }, 500);
         });
   });//createChannel
-
+},300);
 });

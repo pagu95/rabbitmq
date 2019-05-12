@@ -1,6 +1,27 @@
 var amqp = require('amqplib/callback_api');
 var fs = require('fs');
+var jarray= [];
+var myarray= [];
 
+function SortBy(attr){
+	return function(a,b){
+		if( a[attr] > b[attr]){
+			return 1;
+		}else{
+			return -1;
+		}
+		return 0
+	}
+}
+
+function modifyJ(msg){
+
+
+	var jarray = JSON.parse(msg.content.toString());
+  jarray = jarray.sort(SortBy('year'));
+  jarray = JSON.stringify(jarray);
+	return jarray
+}
 
 amqp.connect('amqp://localhost', function(error0, connection) {
   if (error0) {
@@ -23,23 +44,27 @@ amqp.connect('amqp://localhost', function(error0, connection) {
       }*/
 
       channel.bindQueue('groupedq','groupedex2','first');
-      console.log("after bindQueue");
       channel.prefetch(1);
       channel.consume('groupedq',function (ms){
 
       console.log("[x] sould have received array from grouped:",ms.content.toString( ));
+
+      myarray =modifyJ(ms);
+      console.log("[x] now you see the modified array",myarray);
+      fs.writeFile('sortedArray.json',ms.content.toString(),'utf-8');
+
       },{
         noAck:true
       });
   //  });
   });//createChannel
 
+  setTimeout(function(){
   connection.createChannel(function(error1, channel2) {
     if (error1) {
       throw error1;
     }
-
-        var msg = 'this is a test for sorted array';
+    var msg = fs.readFileSync('sortedArray.json','utf-8');
     channel2.assertExchange('sortedex','direct', {
       durable: false
     });
@@ -63,5 +88,5 @@ amqp.connect('amqp://localhost', function(error0, connection) {
           }, 500);
         });
   });//createChannel
-
+},3000);
 });
