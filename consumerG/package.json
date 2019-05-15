@@ -1,0 +1,18 @@
+{
+  "name": "present",
+  "version": "1.0.0",
+  "description": "package.json file for the docker",
+  "main": "index.js",
+  "dependencies": {
+
+
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node consumerG.js"
+  },
+  "author": "",
+  "license": "ISC"
+}
+
