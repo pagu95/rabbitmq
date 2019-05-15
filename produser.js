@@ -40,7 +40,6 @@ myarray.push({
 });
 
 myarray = JSON.stringify(myarray);
-var test = '';
 
 amqp.connect('amqp://localhost', function(error0, connection) {
   if (error0) {
@@ -63,7 +62,6 @@ amqp.connect('amqp://localhost', function(error0, connection) {
           throw error2;
         }
 
-      //channel.prefetch(1);
       channel.bindQueue('originalq','originalex','first');
 
       channel.publish('originalex','first',Buffer.from (myarray));
@@ -88,20 +86,19 @@ amqp.connect('amqp://localhost', function(error0, connection) {
         }
         console.log('waiting sorted')
         channel2.bindQueue('sortedq','sortedex2','third');
-        //console.log("inside bindQueue");
         channel2.prefetch(1);
         channel2.consume('sortedq',function (msg){
 
-        console.log("[x] sould have received array from sorted",msg);
-        test = msg;
-      },{
+        console.log("[x] sould have received array from sorted:\n",msg.content.toString());
+        fs.writeFile('finalarray.json',msg.content.toString(),'utf-8');
+        },{
         noAck:true
       });
-      /*if(test.length > 0){setTimeout(function() {
+      /*setTimeout(function() {
 
               connection.close();
               process.exit(0)
-            }, 500);}*/
+            }, 500);*/
     });
   });//createChannel
 
