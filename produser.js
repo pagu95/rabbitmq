@@ -2,6 +2,7 @@ var amqp = require('amqplib/callback_api');
 var fs = require('fs');
 var myarray = [];
 
+
 myarray.push({
     "id": 1,
     "color": "blue",
@@ -67,39 +68,48 @@ amqp.connect('amqp://localhost', function(error0, connection) {
       channel.publish('originalex','first',Buffer.from (myarray));
       console.log("[x] Sending my array\n\n")
 
-          });
-        });//createChannel
 
-          connection.createChannel(function(error1, channel2) {
-            if (error1) {
-              throw error1;
-            }
-            channel2.assertExchange('sortedex2','direct', {
-              durable: false
-            });
 
-    channel2.assertQueue('sortedq', {
-      exclusive: false
-    }, function(error2, q) {
+      channel.assertExchange('sortedex2','direct', {
+        durable: false
+      });
+
+    /*  channel.assertQueue('groupedq',{
+        exclusive: false
+      }, function(error2, q) {
         if (error2) {
           throw error2;
         }
-        console.log('waiting sorted')
-        channel2.bindQueue('sortedq','sortedex2','third');
-        channel2.prefetch(1);
-        channel2.consume('sortedq',function (msg){
+      });*/
 
-        console.log("[x] sould have received array from sorted:\n",msg.content.toString());
-        fs.writeFile('finalarray.json',msg.content.toString(),'utf-8');
-        },{
-        noAck:true
-      });
-      /*setTimeout(function() {
+      channel.assertQueue('sortedq', {
+        exclusive: false
+      }, function(error2, q) {
+          if (error2) {
+            throw error2;
+          }
+          console.log('waiting sorted')
+          channel.bindQueue('sortedq','sortedex2','third');
+          channel.prefetch(1);
+          channel.consume('sortedq',function (msg){
 
-              connection.close();
-              process.exit(0)
-            }, 500);*/
-    });
+          console.log("[x] sould have received array from sorted:\n",msg.content.toString());
+          fs.writeFile('finalarray.json',msg.content.toString(),'utf-8');
+          },{
+          noAck:true
+        });
+/*setTimeout(function() {
+
+        connection.close();
+        process.exit(0)
+      }, 500);*/
+});
+
+          });
+        });//createChannel
+
+        /*  connection.createChannel(function(error1, channel2) {
+
   });//createChannel
-
+*/
 });//createConnection

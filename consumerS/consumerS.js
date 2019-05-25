@@ -3,16 +3,19 @@ var fs = require('fs');
 var jarray= [];
 var myarray= [];
 
+var jsonattr = process.env.VarForSort;
+
 function modifyJ(msg){
 
-
-    var jarray = JSON.parse(msg.content.toString());
-    jarray.forEach(function (arr) {
-		arr.items.sort((a, b) => (a.year > b.year) ? 1 : -1)
-	});
+  var jarray = JSON.parse(msg.content.toString());
+  jarray.forEach(function (arr) {
+    arr.items.sort((a, b) => (a[jsonattr] > b[jsonattr]) ? 1 : -1)
+  });
   jarray = JSON.stringify(jarray);
-    return jarray
+  return jarray
 }
+
+
 amqp.connect('amqp://visitor:visitor@192.168.1.4/', function(error0, connection) {
   if (error0) {
     throw error0;
@@ -25,14 +28,6 @@ amqp.connect('amqp://visitor:visitor@192.168.1.4/', function(error0, connection)
       durable: false
     });
 
-
-  /*  channel.assertQueue('', {
-      exclusive: true
-    }, function(error2, q) {
-      if (error2) {
-        throw error2;
-      }*/
-
       channel.bindQueue('groupedq','groupedex2','first');
       channel.prefetch(1);
       channel.consume('groupedq',function (ms){
@@ -41,42 +36,33 @@ amqp.connect('amqp://visitor:visitor@192.168.1.4/', function(error0, connection)
 
       myarray =modifyJ(ms);
       console.log("[x] now you see the modified array",myarray);
-      fs.writeFile('sortedArray.json',myarray,'utf-8');
+    //  fs.writeFile('sortedArray.json',myarray,'utf-8');
+
+      var msg = myarray;
+      channel.assertExchange('sortedex','direct', {
+        durable: false
+      });
+      channel.assertQueue('sortedq', {
+        exclusive: false
+      }, function(error2, q) {
+        if (error2) {
+          throw error2;
+        }
+
+      channel.bindQueue('sortedq','sortedex','third');
+
+      channel.publish('sortedex','third',Buffer.from(msg));
+      console.log("\n\n[x] Sending my array")
 
       },{
         noAck:true
       });
-  //  });
+
+      setTimeout(function() {
+
+              connection.close();
+              process.exit(0)
+            }, 500);
+          });
   });//createChannel
-
-  setTimeout(function(){
-  connection.createChannel(function(error1, channel2) {
-    if (error1) {
-      throw error1;
-    }
-    var msg = fs.readFileSync('sortedArray.json','utf-8');
-    channel2.assertExchange('sortedex','direct', {
-      durable: false
-    });
-    channel2.assertQueue('sortedq', {
-      exclusive: false
-    }, function(error2, q) {
-      if (error2) {
-        throw error2;
-      }
-
-    //channel.prefetch(1);
-    channel2.bindQueue('sortedq','sortedex','third');
-
-    channel2.publish('sortedex','third',Buffer.from(msg));
-    console.log("\n\n[x] Sending my array")
-
-    setTimeout(function() {
-
-            connection.close();
-            process.exit(0)
-          }, 500);
-        });
-  });//createChannel
-},3000);
 });

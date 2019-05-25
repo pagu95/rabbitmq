@@ -1,12 +1,14 @@
 var amqp = require('amqplib/callback_api');
-var fs = require('fs');
+//var fs = require('fs');
 var jarray= [];
+
+var jsonattr = process.env.VarForGroup;
 
 function modifyJ(msg){
 
 
 	var jarray = JSON.parse(msg.content.toString());
-        jarray = groupBy('color',jarray);
+        jarray = groupBy(jsonattr,jarray);
         jarray = JSON.stringify(jarray);
 	return jarray
 }
@@ -54,42 +56,32 @@ amqp.connect('amqp://visitor:visitor@192.168.1.4/', function(error0, connection)
 
       myarray = modifyJ(msg);
       console.log("[x] now you see the modified array",myarray);
-      fs.writeFile('groupedArray.json',myarray,'utf-8');
+    //  fs.writeFileSync('groupedArray.json',myarray,'utf-8');
+
+			var msg = myarray;
+	    channel.assertExchange('groupedex','direct', {
+	      durable: false
+	    });
+	    channel.assertQueue('groupedq', {
+	      exclusive: false
+	    }, function(error2, q) {
+	      if (error2) {
+	        throw error2;
+	      }
+
+	    channel.bindQueue('groupedq','groupedex','second');
+	    channel.publish('groupedex','second',Buffer.from(msg));
+	    console.log("\n\n[x] Sending my array");
 
       },{
         noAck:true
       });
-  //  });
+
+			setTimeout(function() {
+
+	            connection.close();
+	            process.exit(0)
+	          }, 500);
+	        });
   });//createChannel
-
-
-setTimeout(function(){
-  connection.createChannel(function(error1, channel2) {
-    if (error1) {
-      throw error1;
-    }
-    var msg = fs.readFileSync('groupedArray.json','utf-8');
-    channel2.assertExchange('groupedex','direct', {
-      durable: false
-    });
-    channel2.assertQueue('groupedq', {
-      exclusive: false
-    }, function(error2, q) {
-      if (error2) {
-        throw error2;
-      }
-
-    channel2.bindQueue('groupedq','groupedex','second');
-
-    channel2.publish('groupedex','second',Buffer.from(msg));
-    console.log("\n\n[x] Sending my array")
-
-    setTimeout(function() {
-
-            connection.close();
-            process.exit(0)
-          }, 500);
-        });
-  });//createChannel
-},300);
 });
