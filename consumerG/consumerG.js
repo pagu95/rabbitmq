@@ -3,6 +3,7 @@ var amqp = require('amqplib/callback_api');
 var jarray= [];
 
 var jsonattr = process.env.VarForGroup;
+var envqueue = process.env.VarForQueue;
 
 function modifyJ(msg){
 
@@ -48,9 +49,9 @@ amqp.connect('amqp://visitor:visitor@192.168.1.4/', function(error0, connection)
       durable: false
     });
 
-      channel.bindQueue('originalq','originalex2','first');
+      channel.bindQueue(envqueue,'originalex2','first');
       channel.prefetch(1);
-      channel.consume('originalq',function (msg){
+      channel.consume(envqueue,function (msg){
 
       console.log("[x] sould have received array from original:\n",msg.content.toString( ));
 

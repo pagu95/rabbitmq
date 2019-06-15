@@ -4,6 +4,7 @@ var jarray= [];
 var myarray= [];
 
 var jsonattr = process.env.VarForSort;
+var envqueue = process.env.VarForQueue;
 
 function modifyJ(msg){
 
@@ -28,9 +29,9 @@ amqp.connect('amqp://visitor:visitor@192.168.1.4/', function(error0, connection)
       durable: false
     });
 
-      channel.bindQueue('groupedq','groupedex2','first');
+      channel.bindQueue(envqueue,'groupedex2','first');
       channel.prefetch(1);
-      channel.consume('groupedq',function (ms){
+      channel.consume(envqueue,function (ms){
 
       console.log("[x] sould have received array from grouped:\n",ms.content.toString( ));
 
